@@ -170,7 +170,7 @@ connection.onmessage = function (message) {
             break;
         
         case "server_alreadyinroom":
-            check_user_status(data.success,data.name);
+            check_user_status(data.success);
             break;   
 
         case "server_error":
@@ -271,11 +271,11 @@ function hasRTCPeerConnection() {
 /**
  * This function will check camera permission.
  */
- async function permission_camera_before_call(channel,name) {
+ async function permission_camera_before_call(channel) {
 
     //get the client and peer video frames Id's
     m_client_Video = document.querySelector('#client_video_frame');
-    m_PeerVideo = document.querySelector('#peer_video_frame');
+   // m_PeerVideo = document.querySelector('#peer_video_frame');
 
     try {
         const stream = await navigator.mediaDevices.getUserMedia({audio: true, video: true});
@@ -294,12 +294,15 @@ function hasRTCPeerConnection() {
       if (audioTracks.length > 0) {
         console.log(`Using audio device: ${audioTracks[0].label}`);
       }
-
+    console.log("3")
     peerConnection = new RTCPeerConnection(configuration);
     console.log('Created local peer connection object peerConnection');
+    console.log("4")
     peerConnection.addEventListener('iceconnectionstatechange', e => onIceStateChange(peerConnection, e));
     current_client_stream.getTracks().forEach(track => peerConnection.addTrack(track, current_client_stream));
-    peerConnection.addEventListener('track', gotRemoteStream);
+    console.log('Client video added to peerconnection object');
+    console.log("5")
+    //peerConnection.addEventListener('track', gotRemoteStream);
     console.log('Added local stream to peerConnection');
 
     if(channel == false){
@@ -311,7 +314,8 @@ function hasRTCPeerConnection() {
     if(channel == true){
         peerConnection.addEventListener('icecandidate', e => icecandidateAdded(e)); 
         console.log("Creating Offer..");
-        Create_DataChannel(name);  
+        Create_DataChannel();  
+        console.log("9")
         creating_offer();
     }
 }
@@ -367,6 +371,9 @@ function errorMessage(message, e) {
  * This function will handle ICE candidate event. 
  */
 function icecandidateAdded(ev) {
+    console.log(ev,"ss")
+    console.log("ee",ev.candidate)
+    console.log("6")
     if (ev.candidate) {
         send({
             type: "candidate",
@@ -409,17 +416,18 @@ var onSend_ChannelCloseStateChange = function (event) {
  * This function will create data channel
  * when user want a room with other user.
  */
-function Create_DataChannel(name) {
+function Create_DataChannel() {
 
-    document.getElementById('dynamic_progress_text').setAttribute('data-loading-text', "Creating a channel with user ..");
+    //document.getElementById('dynamic_progress_text').setAttribute('data-loading-text', "Creating a channel with user ..");
     const dataChannelOptions = {
         ordered: false,             // do not guarantee order
         maxPacketLifeTime: 3000,    // in milliseconds
     };
 
-    var channelname = "webrtc_label_" + name;
+    var channelname = "webrtc_label_Hippo_Video";
     Send_dataChannel = peerConnection.createDataChannel(channelname, dataChannelOptions);
     console.log("Created DataChannel dataChannel = "+Send_dataChannel);
+    console.log("8")
 
     Send_dataChannel.onerror = onSend_ChannelErrorState;
     Send_dataChannel.onmessage = onSend_ChannelMessageCallback;
@@ -430,7 +438,7 @@ function Create_DataChannel(name) {
  * This function will create the webRTC offer request for other user.
  */
  async function creating_offer() {
-    document.getElementById('dynamic_progress_text').setAttribute('data-loading-text', "Requesting with user.. Please wait..");
+    //document.getElementById('dynamic_progress_text').setAttribute('data-loading-text', "Requesting with user.. Please wait..");
     try {
         console.log('pc1 createOffer start');
         const offer = await peerConnection.createOffer(offerOptions);
@@ -444,6 +452,7 @@ function Create_DataChannel(name) {
  */
 async function onCreateOfferSuccess(desc) {
     console.log(`Offer from client\n${desc.sdp}`);
+    console.log(`checkkkkkkkkkkkkkkkkkkkkk\n${desc}`);
     try {
       await peerConnection.setLocalDescription(desc);
       onSetLocalSuccess(peerConnection);
@@ -515,12 +524,14 @@ function onCreateSessionDescriptionError(error) {
  * This function will print log of local description sucess
  */
 function onSetLocalSuccess(pc) {
+    console.log("10")
     console.log(`setLocalDescription complete`);
 }
 /**
  * This function will print log of remote description sucess
  */ 
 function onSetRemoteSuccess(pc) {
+    console.log("19")
     console.log(`setRemoteDescription complete`);
 }
 /**
@@ -533,7 +544,7 @@ function onSetSessionDescriptionError(error) {
  * This function will handle when another user answers to our offer .
  */
  async function onAnswer(answer) { 
-    document.getElementById('dynamic_progress_text').setAttribute('data-loading-text', "Waiting for a answer from user..Please wait ..");
+    //document.getElementById('dynamic_progress_text').setAttribute('data-loading-text', "Waiting for a answer from user..Please wait ..");
     try {
         await peerConnection.setRemoteDescription(answer);
         onSetRemoteSuccess(peerConnection);
@@ -741,18 +752,20 @@ function Create_Popup_Notifications() {
     outgoing_popup_set = true;
 }
 
-function check_user_status(status, name)
+function check_user_status(status)
 {
     if(status == false)
     {
          //availble user
          //enable the chat window
-         Create_Popup_Notifications();
+         //Create_Popup_Notifications();
          //make an offer 
-         document.getElementById('dynamic_progress_text').setAttribute('data-loading-text', "Creating a connection .. Please wait..");
+         //document.getElementById('dynamic_progress_text').setAttribute('data-loading-text', "Creating a connection .. Please wait..");
          //check camera permission before connection
+         console.log("1")
          create_videocall_page();
-         permission_camera_before_call(true,name);
+         console.log("2")
+         permission_camera_before_call(true);
     }
     else
     {
@@ -837,7 +850,7 @@ function Delete_webrtc_connection()
 
     /** return the gloabl variable value to normal */
     connectedUser = null;
-    m_PeerVideo.src = "";
+   // m_PeerVideo.src = "";
     peerConnection.onicecandidate = null;
     peerConnection.onaddstream = null;
     
@@ -947,14 +960,11 @@ function call_user(name) {
     else {
         var otherUsername = name;
         connectedUser = otherUsername;
-
-        if (otherUsername.length > 0) {
-            
-            send({
-                type: "want_to_call",
-                name: otherUsername
-            });
-        }
+        send({
+            type: "want_to_call",
+            name:"Hippo"
+        });
+    
     }
 }
 /**

@@ -1,0 +1,16 @@
+{
+  "name": "webrtc_video_call-main",
+  "version": "1.0.0",
+  "description": "This is a repository for the WebRTC Video Chat Room Application using Javascript.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "rtcpeerconnection": "^8.4.0",
+    "ws": "^8.12.0"
+  }
+}
