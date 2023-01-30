@@ -4,7 +4,7 @@
 ********************************************************************/
 /* library for websocket */
 var WebSocketServer = require('ws').Server;
-let RTCPeerConnection = require('rtcpeerconnection');
+//let RTCPeerConnection = require('rtcpeerconnection');
 var wss = new WebSocketServer({ port: 8886 });
 /* to store the connection details */
 var users = {};
@@ -12,7 +12,22 @@ var users = {};
 var map = new Map();
 var count_message = 0;
 var conn_offer;
+var webrtc = require("wrtc");
 let peerConnection;
+var client_name;
+var log_user = "selva";
+var configuration = {
+	"iceServers": [
+		{
+			"urls": "stun:stun.1.google.com:19302"
+		},
+		{
+			urls: 'turn:192.158.29.39:3478?transport=tcp',
+			credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+			username: '28224511:1379330808'
+		}
+	]
+};
 
 wss.on('listening', function () {
 	console.log(`Server started with port ${this.address().port}`);
@@ -84,6 +99,7 @@ wss.on('connection', function (connection) {
 					// 	console.log("offer -> server_nouser");
 					// 	sendTo(connection, { type: "server_nouser", success: false });
 					// }
+					client_name = data.name
 					conn_offer = data.offer
 					console.log("11")
 					permission_camera_before_call()
@@ -104,15 +120,17 @@ wss.on('connection', function (connection) {
 					/* candidate request */
 				case "candidate":
 					/* Get connection details */
-					// var conn = users[data.name];
+					var conn = users[data.name];
 					// if (conn != null) {
 					// 	/* Send candidate details to user */
 					// 	sendTo(conn, { type: "server_candidate", candidate: data.candidate });
 					// }
+					//console.log("checkkk",conn.name)
 					console.log("1111111111",data.candidate)
 					onCandidate(data.candidate)
 					async function onCandidate(candidate) {
 					// try {
+						console.log("222222222",candidate)
 						await (peerConnection.addIceCandidate(candidate));
 						onAddIceCandidateSuccess(peerConnection);
 					//   } catch (e) {
@@ -302,23 +320,12 @@ function onAddIceCandidateError(pc, error) {
  */
 async function permission_camera_before_call()
 {
-	var configuration = {
-		"iceServers": [
-			{
-				"urls": "stun:stun.1.google.com:19302"
-			},
-			{
-				urls: 'turn:192.158.29.39:3478?transport=tcp',
-				credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-				username: '28224511:1379330808'
-			}
-		]
-	};
-	peerConnection = new RTCPeerConnection(configuration);
+	peerConnection = new webrtc.RTCPeerConnection(configuration);
     console.log('Created server peer connection object peerConnection');
     console.log("12")
+	console.log("5555555",peerConnection)
     peerConnection.addEventListener('iceconnectionstatechange', e => onIceStateChange(peerConnection, e));
-	peerConnection.addEventListener('track', gotRemoteStream);
+	//peerConnection.addEventListener('track', gotRemoteStream);
 	console.log("Got video from client side")
 	console.log("13")
 	console.log("Creating Answer..");
@@ -411,7 +418,7 @@ function onSetSessionDescriptionError(error) {
  */
 function icecandidateAdded(ev) {
 
-	var conn = users[data.name];
+	var conn = users[client_name];
     console.log(ev,"ss")
     console.log("ee",ev.candidate)
     console.log("6")
@@ -444,7 +451,7 @@ async function onCreateAnswerSuccess(desc) {
     //store the answer
     conn_answer = desc;
     console.log("sending answer to client.."); 
-	var conn = users[data.name];
+	var conn = users[log_user];
 	if (conn != null) {
 		/* Send the answer back to requested user */
 		sendTo(conn, { type: "server_answer", answer: conn_answer });

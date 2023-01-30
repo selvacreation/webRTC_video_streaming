@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "rtcpeerconnection": "^8.4.0",
+    "wrtc": "^0.4.7",
     "ws": "^8.12.0"
   }
 }

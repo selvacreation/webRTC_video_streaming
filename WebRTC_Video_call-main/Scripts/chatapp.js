@@ -548,13 +548,14 @@ function onSetSessionDescriptionError(error) {
     try {
         await peerConnection.setRemoteDescription(answer);
         onSetRemoteSuccess(peerConnection);
+        user_is_ready()
       } catch (e) {
         onSetSessionDescriptionError(e);
       }
 
-    send({
-        type: "ready"
-    });
+    // send({
+    //     type: "ready"
+    // });
 }
 /**
  * This function will send the user message to server.
@@ -982,10 +983,10 @@ function onOffer(offer, name) {
  * This function will remove all the UI popup when the 
  * room is created sucessfully.
  */
-function user_is_ready(val, peername) {
+function user_is_ready(val = true, peername = "KP") {
     if (val == true) {
         document.getElementById('divChatName_peername').innerHTML = peername;
-
+        console.log("21")
         //clear all dynamic datas
         clear_incoming_modal_popup();
         clear_outgoing_modal_popup();
